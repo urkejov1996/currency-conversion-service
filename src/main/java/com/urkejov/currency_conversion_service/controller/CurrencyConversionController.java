@@ -1,6 +1,8 @@
 package com.urkejov.currency_conversion_service.controller;
 
 import com.urkejov.currency_conversion_service.entity.CurrencyConversion;
+import com.urkejov.currency_conversion_service.service.CurrencyExchangeProxy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,9 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("currency-conversion")
 public class CurrencyConversionController {
+
+    @Autowired
+    private CurrencyExchangeProxy currencyExchangeProxy;
 
     @GetMapping("/from/{from}/to/{to}/quantity/{quantity}")
     public CurrencyConversion calculateCurrencyConversion(@PathVariable String from,
@@ -34,6 +39,22 @@ public class CurrencyConversionController {
                 from, to, quantity,
                 currencyConversion.getConversionMultiple(),
                 quantity.multiply(currencyConversion.getConversionMultiple()),
-                currencyConversion.getEnvironment());
+                currencyConversion.getEnvironment() + " Rest Template");
+    }
+
+    @GetMapping("/feign/from/{from}/to/{to}/quantity/{quantity}")
+    public CurrencyConversion calculateCurrencyConversionFeign(@PathVariable String from,
+                                                               @PathVariable String to,
+                                                               @PathVariable BigDecimal quantity) {
+
+
+        CurrencyConversion currencyConversion = currencyExchangeProxy.retrieveExchangeValue(from, to);
+
+        return new CurrencyConversion(
+                currencyConversion.getId(),
+                from, to, quantity,
+                currencyConversion.getConversionMultiple(),
+                quantity.multiply(currencyConversion.getConversionMultiple()),
+                currencyConversion.getEnvironment() + " Feign");
     }
 }
